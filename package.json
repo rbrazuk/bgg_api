@@ -1,0 +1,11 @@
+{
+  "name": "bggapi",
+  "version": "1.0.0",
+  "description": "API that converts BoardGameGeek's XML API to JSON",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eloise Celeste",
+  "license": "ISC"
+}
