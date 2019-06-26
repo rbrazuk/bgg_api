@@ -5,22 +5,23 @@ var router = express.Router();
 const axios = require('axios');
 var parseString = require('xml2js').parseString;
 
+const bggApiBaseUrl = "https://www.boardgamegeek.com/xmlapi2";
+
 router.use(function(req, res, next) {
     console.log('Request made');
     next(); 
 });
 
-app.get('/', function(req, res) {
-    
-    axios.get("https://www.boardgamegeek.com/xmlapi2/collection?username=indoorsy")
+router.get('/collection/:username', (req, res) => {
+    axios.get(`${bggApiBaseUrl}/collection?username=${req.params.username}`)
         .then(result => {
             var xml = result.data;
             parseString(xml, (err, result) => {
-                //console.log(JSON.stringify(result));
-
+                if (!result.items) {
+                    res.json({message: "bgg user not found"});
+                }
+                
                 var object = result.items.item.map(game => {
-                    //objects.push(game.name._);
-                    //console.log(game.name._);
                     return {
                         bggId: game.$.objectid,
                         objectType: game.$.objecttype,
@@ -31,20 +32,13 @@ app.get('/', function(req, res) {
                         thumbnail: game.thumbnail[0],
                         status: game.status.$,
                     };
-                })
-                
-                res.send(object);
-                //res.send(result.items.item);
-            })
+                });          
+                res.json(object);
+            });
         })
         .catch(err => {
             console.log(err);
-        })
-});
-
-router.get('/collection/:username', (req, res) => {
-    console.log(req.params);
-    res.send(req.params.username);
+        });
 });
 
 app.use('/api', router);
