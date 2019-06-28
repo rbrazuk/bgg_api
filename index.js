@@ -41,6 +41,82 @@ router.get('/collection/:username', (req, res) => {
         });
 });
 
+router.get('/game/:id', (req, res) => {
+    axios.get(`${bggApiBaseUrl}/thing?id=${req.params.id}`)
+        .then(result => {
+            var xml = result.data;
+
+            parseString(xml, (err, result) => {
+                if (err) {
+                    res.send(error);
+                }
+                var rawGame = result.items.item[0];
+                //res.json(rawGame);
+                var object = {
+                    categories: [],
+                    mechanics: [],
+                    families: [], 
+                    expansions: [],
+                    designers: [],
+                    artists: [],
+                    publishers: []
+                };
+                object.id = rawGame.$.id;
+
+                for (var i = 0; i < rawGame.name.length; i++) {
+                    if (rawGame.name[i].$.type == "primary") {
+                        object.name = rawGame.name[i].$.value;
+                        break;
+                    }
+                }
+                object.yearPublished = rawGame.yearpublished[0].$.value;
+                object.description = result.items.item[0].description[0];
+
+                
+                for (let item of rawGame.link) {
+                    switch (item.$.type) {
+                        case "boardgamecategory":
+                            populateLink(item.$, object.categories);
+                            break;
+                        case "boardgamemechanic":
+                            populateLink(item.$, object.mechanics);
+                            break;
+                        case "boardgamefamily":
+                            populateLink(item.$, object.families);
+                            break;
+                        case "boardgameexpansion":
+                            populateLink(item.$, object.expansions);
+                            break;
+                        case "boardgamedesigner":
+                            populateLink(item.$, object.designers);
+                            break;
+                        case "boardgameartist":
+                            populateLink(item.$, object.artists);
+                            break;
+                        case "boardgamepublisher":
+                            populateLink(item.$, object.publishers);
+                            break;
+                    }
+                }
+
+                
+                console.log(object);
+                res.json(object);
+            });
+            
+        })
+        .catch(err => {
+            console.log(err);
+        });
+});
+
+var populateLink = (link, linksArray) => {
+    linksArray.push({
+        id: link.id,
+        value: link.value
+    });
+}
+
 app.use('/api', router);
 
 app.listen(3000);
