@@ -52,7 +52,7 @@ router.get('/game/:id', (req, res) => {
                 if (err) {
                     res.send(error);
                 }
-                var rawGame = result.items.item[0];
+                const rawGame = result.items.item[0];
                 
                 var gameName = "";
 
@@ -67,7 +67,7 @@ router.get('/game/:id', (req, res) => {
                     rawGame.$.id, 
                     gameName, 
                     rawGame.yearpublished[0].$.value,
-                    rawGame.description
+                    rawGame.description[0]
                 );
 
                 game.playerCount.min = rawGame.minplayers[0].$.value;
