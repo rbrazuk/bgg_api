@@ -7,6 +7,8 @@ var parseString = require('xml2js').parseString;
 
 const bggApiBaseUrl = "https://www.boardgamegeek.com/xmlapi2";
 
+var Game = require('./models/game');
+
 router.use(function(req, res, next) {
     console.log('Request made');
     next(); 
@@ -51,57 +53,54 @@ router.get('/game/:id', (req, res) => {
                     res.send(error);
                 }
                 var rawGame = result.items.item[0];
-                //res.json(rawGame);
-                var object = {
-                    categories: [],
-                    mechanics: [],
-                    families: [], 
-                    expansions: [],
-                    designers: [],
-                    artists: [],
-                    publishers: []
-                };
-                object.id = rawGame.$.id;
+                
+                var gameName = "";
 
                 for (var i = 0; i < rawGame.name.length; i++) {
                     if (rawGame.name[i].$.type == "primary") {
-                        object.name = rawGame.name[i].$.value;
+                        gameName = rawGame.name[i].$.value;
                         break;
                     }
                 }
-                object.yearPublished = rawGame.yearpublished[0].$.value;
-                object.description = result.items.item[0].description[0];
-
                 
+                var game = new Game(
+                    rawGame.$.id, 
+                    gameName, 
+                    rawGame.yearpublished[0].$.value,
+                    rawGame.description
+                );
+
+                game.playerCount.min = rawGame.minplayers[0].$.value;
+                game.playerCount.max = rawGame.maxplayers[0].$.value;
+                game.playtime.min = rawGame.minplaytime[0].$.value;
+                game.playtime.max = rawGame.maxplaytime[0].$.value;
+
                 for (let item of rawGame.link) {
                     switch (item.$.type) {
                         case "boardgamecategory":
-                            populateLink(item.$, object.categories);
+                            populateLink(item.$, game.links.categories);
                             break;
                         case "boardgamemechanic":
-                            populateLink(item.$, object.mechanics);
+                            populateLink(item.$, game.links.mechanics);
                             break;
                         case "boardgamefamily":
-                            populateLink(item.$, object.families);
+                            populateLink(item.$, game.links.families);
                             break;
                         case "boardgameexpansion":
-                            populateLink(item.$, object.expansions);
+                            populateLink(item.$, game.links.expansions);
                             break;
                         case "boardgamedesigner":
-                            populateLink(item.$, object.designers);
+                            populateLink(item.$, game.links.designers);
                             break;
                         case "boardgameartist":
-                            populateLink(item.$, object.artists);
+                            populateLink(item.$, game.links.artists);
                             break;
                         case "boardgamepublisher":
-                            populateLink(item.$, object.publishers);
+                            populateLink(item.$, game.links.publishers);
                             break;
                     }
                 }
-
-                
-                console.log(object);
-                res.json(object);
+                res.json(game);
             });
             
         })
